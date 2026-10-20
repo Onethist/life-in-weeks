@@ -1,0 +1,1596 @@
+<title>Life in Weeks</title>
+<style>
+/* ── tokens ── */
+:root {
+  --bg:#09111F;--surface:#0D1826;--surface2:#111F33;--surface3:#162438;
+  --border:#1B2E47;--border2:#223550;
+  --past:#2952CC;--past-hi:#3D68E8;--past-dim:#1A3580;
+  --now:#F59E0B;--now-glow:rgba(245,158,11,0.28);
+  --future:#0C1A2E;--future-bd:#182640;
+  --text:#CDD9EE;--muted:#4E6880;--dim:#253C58;--faint:#1A2E45;
+  --log-dot:#CDD9EE;
+  --radius:0px;
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#EAF0F9;--surface:#F4F8FE;--surface2:#EBF2FA;--surface3:#E2ECF7;
+    --border:#BDD0E8;--border2:#A8C0DC;
+    --past:#1A3FB0;--past-hi:#2550D0;--past-dim:#3060C0;
+    --now:#B86800;--now-glow:rgba(184,104,0,0.2);
+    --future:#D8E5F5;--future-bd:#C0D4EC;
+    --text:#0A1929;--muted:#5A789A;--dim:#8AAAC8;--faint:#D0DDEF;
+    --log-dot:#0A1929;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#09111F;--surface:#0D1826;--surface2:#111F33;--surface3:#162438;
+  --border:#1B2E47;--border2:#223550;
+  --past:#2952CC;--past-hi:#3D68E8;--past-dim:#1A3580;
+  --now:#F59E0B;--now-glow:rgba(245,158,11,0.28);
+  --future:#0C1A2E;--future-bd:#182640;
+  --text:#CDD9EE;--muted:#4E6880;--dim:#253C58;--faint:#1A2E45;
+  --log-dot:#CDD9EE;
+}
+:root[data-theme="light"]{
+  --bg:#EAF0F9;--surface:#F4F8FE;--surface2:#EBF2FA;--surface3:#E2ECF7;
+  --border:#BDD0E8;--border2:#A8C0DC;
+  --past:#1A3FB0;--past-hi:#2550D0;--past-dim:#3060C0;
+  --now:#B86800;--now-glow:rgba(184,104,0,0.2);
+  --future:#D8E5F5;--future-bd:#C0D4EC;
+  --text:#0A1929;--muted:#5A789A;--dim:#8AAAC8;--faint:#D0DDEF;
+  --log-dot:#0A1929;
+}
+
+/* ── reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:12px;line-height:1.5;font-weight:400;
+  padding-inline:24px;padding-block:36px 80px;min-height:100%;
+}
+.page{max-width:700px;margin:0 auto}
+
+/* ── header ── */
+.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px}
+.hd-left{}
+h1{font-size:22px;font-weight:300;letter-spacing:-0.04em;line-height:1;color:var(--text);margin-bottom:4px}
+.byline{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+.hd-actions{display:flex;gap:4px;align-items:center;flex-shrink:0;padding-top:2px}
+.hd-btn{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  font-family:inherit;font-size:9px;font-weight:500;letter-spacing:0.1em;
+  text-transform:uppercase;padding:5px 10px;cursor:pointer;
+  transition:color .15s,border-color .15s;white-space:nowrap;
+}
+.hd-btn:hover{color:var(--text);border-color:var(--border2)}
+.tbtn{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  font-size:13px;width:30px;height:30px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s,border-color .15s;
+}
+.tbtn:hover{color:var(--text);border-color:var(--border2)}
+
+/* ── controls ── */
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:9px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted)}
+input[type="date"],input[type="number"],input[type="text"],textarea{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  font-family:inherit;font-size:12px;font-weight:400;padding:7px 11px;
+  outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none;
+}
+input:focus,textarea:focus{border-color:var(--past-hi)}
+input[type="date"]{width:160px}
+input[type="text"]{width:156px}
+input[type="number"]{width:72px}
+input.age{width:62px}
+textarea{resize:vertical;font-size:12px;line-height:1.55}
+
+/* ── stats bar ── */
+.stats-bar{
+  font-size:10px;color:var(--muted);letter-spacing:0.04em;
+  margin-bottom:20px;display:flex;gap:0;flex-wrap:wrap;
+}
+.sstat{padding-right:18px;margin-right:18px;border-right:1px solid var(--border)}
+.sstat:last-child{border-right:none;margin-right:0;padding-right:0}
+.sstat strong{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ── legend ── */
+.legend{display:flex;gap:18px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.li{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+.ld{width:10px;height:10px;flex-shrink:0;border:1px solid transparent;position:relative}
+.ld.past{background:var(--past)}
+.ld.now{background:var(--now)}
+.ld.fut{background:var(--future);border-color:var(--future-bd)}
+.ld.ph{width:5px;height:12px;background:linear-gradient(to bottom,#3B82F6 0% 33%,#10B981 33% 66%,#F59E0B 66% 100%);border:none}
+.ld.ev{background:var(--future);border-color:var(--future-bd);overflow:visible}
+.ld.ev::before{content:'';position:absolute;top:-1px;right:-1px;width:0;height:0;border-style:solid;border-width:0 5px 5px 0;border-color:transparent #EF4444 transparent transparent}
+.ld.lg{background:var(--future);border-color:var(--future-bd);overflow:visible}
+.ld.lg::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:2px;height:2px;background:var(--log-dot);border-radius:50%}
+
+/* ── grid ── */
+.grid-scroll{overflow-x:auto;margin-bottom:36px;padding-bottom:4px}
+.rows{display:flex;flex-direction:column;gap:2px;width:max-content}
+.row{display:flex;align-items:center}
+.yl{
+  width:30px;font-size:8px;color:var(--dim);text-align:right;padding-right:6px;
+  flex-shrink:0;font-variant-numeric:tabular-nums;line-height:10px;
+  cursor:pointer;transition:color .1s;user-select:none;
+}
+.yl:hover{color:var(--now) !important}
+.yl.dec{color:var(--muted);font-size:9px}
+.ph-strip{width:5px;height:10px;flex-shrink:0;margin-right:4px;background:transparent;transition:background .3s}
+.cells{display:flex;gap:2px}
+.wk{
+  width:10px;height:10px;flex-shrink:0;border:1px solid transparent;
+  position:relative;cursor:pointer;transition:filter .08s;
+}
+.wk.past{background:var(--past)}
+.wk.past:hover{filter:brightness(1.35)}
+.wk.now{background:var(--now);box-shadow:0 0 0 1px var(--bg),0 0 10px var(--now-glow);animation:pulse 2.8s ease-in-out infinite;z-index:1}
+.wk.fut{background:var(--future);border-color:var(--future-bd)}
+.wk.fut:hover{background:var(--surface3);border-color:var(--border)}
+.wk.sel{box-shadow:0 0 0 2px var(--now),0 0 0 3px var(--bg);z-index:4}
+.wk.now.sel{box-shadow:0 0 0 2px var(--text),0 0 0 3px var(--bg),0 0 10px var(--now-glow)}
+.wk.has-ev::before{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 4px 4px 0;border-color:transparent var(--ev-c,#fff) transparent transparent;z-index:2}
+.wk.has-log::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:2px;height:2px;background:var(--log-dot);border-radius:50%;z-index:3}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 1px var(--bg),0 0 6px var(--now-glow)}
+  50%{box-shadow:0 0 0 1px var(--bg),0 0 16px var(--now-glow)}
+}
+@media(prefers-reduced-motion:reduce){.wk.now{animation:none}}
+
+/* ── week panel (slides from right) ── */
+.wp-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,0);z-index:290;
+  pointer-events:none;transition:background .22s;
+}
+.wp-bg.on{background:rgba(0,10,22,0.55);pointer-events:auto}
+.wp{
+  position:fixed;top:0;right:0;bottom:0;width:300px;
+  background:var(--surface);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);
+  z-index:300;
+}
+.wp.open{transform:none}
+.wp-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:18px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.wp-title{}
+.wp-date{font-size:13px;font-weight:400;color:var(--text);margin-bottom:3px}
+.wp-meta{font-size:10px;color:var(--muted);letter-spacing:0.04em}
+.wp-x{
+  background:transparent;border:none;color:var(--dim);font-size:18px;line-height:1;
+  cursor:pointer;padding:0 2px;transition:color .15s;flex-shrink:0;margin-top:-2px;
+  font-family:inherit;
+}
+.wp-x:hover{color:var(--text)}
+.wp-body{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.wp-section{padding:14px 18px;border-bottom:1px solid var(--border)}
+.wp-section:last-child{border-bottom:none;flex:1}
+.wp-sec-label{font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.wp-phase-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11px;color:var(--text);
+}
+.wp-phase-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.wp-ev-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);padding:3px 0}
+.wp-ev-dot{width:7px;height:7px;flex-shrink:0}
+.wp-empty{font-size:10px;color:var(--dim);padding:2px 0}
+
+/* log rows inside week panel */
+.wp-log-row{
+  padding:9px 0;border-bottom:1px solid var(--faint);
+  display:flex;flex-direction:column;gap:4px;
+}
+.wp-log-row:last-child{border-bottom:none}
+.wp-log-text{font-size:11px;color:var(--text);line-height:1.5;word-break:break-word}
+.wp-log-actions{display:flex;gap:10px;align-items:center}
+.wp-log-date{font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wp-log-btn{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:10px;padding:0;transition:color .15s;font-family:inherit}
+.wp-log-btn:hover{color:var(--text)}
+.wp-log-btn.del:hover{color:#EF4444}
+
+/* log edit in week panel */
+.wp-log-edit{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.wp-log-edit textarea{font-size:11px;padding:7px 10px;min-height:50px;line-height:1.45;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:inherit;resize:none;outline:none;transition:border-color .15s}
+.wp-log-edit textarea:focus{border-color:var(--past-hi)}
+.wp-log-edit-actions{display:flex;gap:6px}
+
+/* quick-add in week panel */
+.wp-add{padding:14px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.wp-add textarea{
+  width:100%;font-size:11px;padding:9px 12px;min-height:64px;
+  line-height:1.5;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:inherit;resize:none;outline:none;
+  transition:border-color .15s;
+}
+.wp-add textarea:focus{border-color:var(--past-hi)}
+.wp-add textarea::placeholder{color:var(--dim)}
+.wp-add-foot{display:flex;justify-content:space-between;align-items:center}
+.wp-add-hint{font-size:9px;color:var(--dim)}
+.wp-save{
+  font-family:inherit;font-weight:500;font-size:9px;letter-spacing:0.1em;
+  text-transform:uppercase;padding:6px 14px;background:var(--past);border:none;
+  color:#fff;cursor:pointer;transition:background .15s;flex-shrink:0;
+}
+.wp-save:hover{background:var(--past-hi)}
+
+/* ── bottom panel ── */
+.panel-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ptab{
+  font-family:inherit;font-weight:500;font-size:9px;letter-spacing:0.14em;
+  text-transform:uppercase;padding:9px 16px;background:transparent;
+  border:1px solid transparent;border-bottom:none;color:var(--muted);cursor:pointer;
+  position:relative;bottom:-1px;transition:color .15s,background .15s,border-color .15s;
+}
+.ptab.act{color:var(--text);background:var(--surface);border-color:var(--border);border-bottom-color:var(--surface)}
+.ptab:not(.act):hover{color:var(--text)}
+.panel-body{background:var(--surface);border:1px solid var(--border);border-top:none;padding:18px}
+
+/* item list */
+.item-list{display:flex;flex-direction:column;margin-bottom:18px;min-height:16px}
+.item{
+  display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-bottom:1px solid var(--faint);transition:background .1s;
+}
+.item:last-child{border-bottom:none}
+.item-swatch{width:10px;height:10px;flex-shrink:0}
+.item-name{flex:1;font-size:11px;color:var(--text)}
+.item-range{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.item-del{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;transition:color .15s;font-family:inherit;flex-shrink:0}
+.item-del:hover{color:#EF4444}
+.empty-hint{font-size:10px;color:var(--dim);letter-spacing:0.03em;padding:6px 0}
+
+/* log list in panel */
+.log-entry{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-bottom:1px solid var(--faint)}
+.log-entry:last-child{border-bottom:none}
+.log-entry-header{display:flex;align-items:center;gap:8px}
+.log-entry-date{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.log-entry-text{font-size:11px;color:var(--text);line-height:1.5;word-break:break-word;cursor:text}
+.log-entry-text:hover{opacity:.8}
+.log-edit-btn{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:10px;padding:0 3px;line-height:1;transition:color .15s;font-family:inherit}
+.log-edit-btn:hover{color:var(--muted)}
+.log-edit-date{font-size:10px;padding:4px 8px;width:152px;margin-bottom:6px;display:block}
+.log-edit-text{width:100%;font-size:11px;min-height:54px;line-height:1.5;margin-bottom:8px;padding:6px 10px}
+.log-edit-actions{display:flex;gap:8px}
+.log-save-btn,.log-cancel-btn{
+  font-family:inherit;font-weight:500;font-size:9px;letter-spacing:0.1em;
+  text-transform:uppercase;padding:5px 12px;cursor:pointer;
+}
+.log-save-btn{background:var(--past);border:none;color:#fff;transition:background .15s}
+.log-save-btn:hover{background:var(--past-hi)}
+.log-cancel-btn{background:transparent;border:1px solid var(--border);color:var(--muted);transition:color .15s,border-color .15s}
+.log-cancel-btn:hover{color:var(--text);border-color:var(--border2)}
+
+/* add form */
+.add-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding-top:16px;border-top:1px solid var(--border)}
+.add-form .field label{font-size:8px}
+.add-form .field.grow{flex:1;min-width:150px}
+.swatches{display:flex;gap:4px;flex-wrap:wrap}
+.sw{width:14px;height:14px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:transform .1s,border-color .1s}
+.sw:hover{transform:scale(1.3)}
+.sw.sel{border-color:var(--text)}
+.btn-add{
+  font-family:inherit;font-weight:500;font-size:9px;letter-spacing:0.1em;
+  text-transform:uppercase;padding:8px 14px;background:var(--past);border:none;
+  color:#fff;cursor:pointer;transition:background .15s;align-self:flex-end;
+}
+.btn-add:hover{background:var(--past-hi)}
+
+/* export / import */
+.io-bar{display:flex;gap:0}
+.io-overlay{position:fixed;inset:0;background:rgba(0,10,22,0.7);display:flex;align-items:center;justify-content:center;z-index:400}
+.io-box{background:var(--surface);border:1px solid var(--border);padding:24px;width:min(520px,calc(100vw - 32px));display:flex;flex-direction:column;gap:14px}
+.io-title{font-size:9px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted)}
+.io-ta{width:100%;height:220px;font-size:10px;font-family:ui-monospace,'SF Mono',monospace;font-weight:400;resize:vertical;line-height:1.5;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);outline:none;transition:border-color .15s}
+.io-ta:focus{border-color:var(--past-hi)}
+.io-actions{display:flex;gap:8px;align-items:center}
+.io-msg{font-size:9px;color:var(--muted);margin-left:4px}
+.io-msg.err{color:#EF4444}
+.io-close-btn{
+  font-family:inherit;font-weight:500;font-size:9px;letter-spacing:0.1em;
+  text-transform:uppercase;padding:6px 12px;background:transparent;
+  border:1px solid var(--border);color:var(--muted);cursor:pointer;
+  transition:color .15s,border-color .15s;
+}
+.io-close-btn:hover{color:var(--text);border-color:var(--border2)}
+
+/* ── mood ── */
+.mood-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mood-lbl{font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.mood-pick{display:flex;gap:6px}
+.mood-dot{
+  width:13px;height:13px;border-radius:50%;cursor:pointer;flex-shrink:0;
+  border:2px solid transparent;transition:transform .1s,border-color .1s,opacity .1s;
+  opacity:.35;
+}
+.mood-dot:hover{opacity:.75;transform:scale(1.2)}
+.mood-dot.sel{opacity:1;transform:scale(1.2);border-color:var(--text)}
+.mood-dot[data-m="1"]{background:#EF4444}
+.mood-dot[data-m="2"]{background:#F97316}
+.mood-dot[data-m="3"]{background:#6B7280}
+.mood-dot[data-m="4"]{background:#3B82F6}
+.mood-dot[data-m="5"]{background:#22C55E}
+.mood-indicator{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block;vertical-align:middle;margin-right:4px}
+
+/* ── search ── */
+.search-overlay{
+  position:fixed;inset:0;background:rgba(0,10,22,0.78);
+  display:flex;align-items:flex-start;justify-content:center;
+  z-index:500;padding-top:72px;
+}
+.search-box{
+  background:var(--surface);border:1px solid var(--border);
+  width:min(560px,calc(100vw - 32px));
+  display:flex;flex-direction:column;max-height:calc(100vh - 112px);
+}
+.search-input-row{
+  display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);padding:0 16px;
+}
+.search-icon{color:var(--dim);font-size:14px;flex-shrink:0;margin-right:10px;pointer-events:none}
+.search-input{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-family:inherit;font-size:14px;padding:16px 0;outline:none;
+}
+.search-input::placeholder{color:var(--dim)}
+.search-x{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;font-family:inherit;transition:color .15s;flex-shrink:0}
+.search-x:hover{color:var(--text)}
+.search-results{overflow-y:auto;flex:1}
+.search-result{
+  display:flex;align-items:flex-start;gap:12px;padding:11px 16px;
+  border-bottom:1px solid var(--faint);cursor:pointer;transition:background .1s;
+}
+.search-result:last-child{border-bottom:none}
+.search-result:hover{background:var(--surface2)}
+.sr-type{
+  font-size:8px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  padding:2px 6px;border:1px solid var(--border);color:var(--muted);
+  flex-shrink:0;margin-top:1px;white-space:nowrap;
+}
+.sr-body{flex:1;min-width:0}
+.sr-text{font-size:11px;color:var(--text);line-height:1.4;word-break:break-word}
+.sr-meta{font-size:9px;color:var(--dim);margin-top:3px;font-variant-numeric:tabular-nums}
+.search-empty{padding:28px 16px;font-size:11px;color:var(--dim);text-align:center;letter-spacing:0.03em}
+.search-hint{padding:14px 16px;font-size:9px;color:var(--dim);text-align:center;letter-spacing:0.06em;text-transform:uppercase;border-top:1px solid var(--faint)}
+
+/* ── tags ── */
+.tag-chip{
+  display:inline-flex;align-items:center;
+  font-size:9px;font-weight:500;letter-spacing:0.04em;
+  padding:2px 7px;border:1px solid var(--border);color:var(--muted);
+  white-space:nowrap;user-select:none;
+}
+.tag-chip.btn{cursor:pointer;transition:color .12s,border-color .12s,background .12s}
+.tag-chip.btn:hover{color:var(--text);border-color:var(--border2)}
+.tag-chip.act{color:var(--text);background:var(--surface2);border-color:var(--border2)}
+.tags-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.tag-filter-bar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tag-filter-lbl{font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-right:2px;flex-shrink:0}
+.tag-input-row{display:flex;align-items:center;gap:7px;margin-top:6px}
+.tag-input-lbl{font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);white-space:nowrap;flex-shrink:0}
+input.tag-in{flex:1;font-size:11px!important;padding:5px 9px!important}
+
+/* ── view toggle ── */
+.view-toggle{display:flex;gap:0;border:1px solid var(--border);padding:2px;margin-bottom:24px}
+.vt-btn{
+  font-family:inherit;font-size:9px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  padding:5px 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;
+  transition:color .15s,background .15s;
+}
+.vt-btn.act{background:var(--surface2);color:var(--text)}
+.vt-btn:not(.act):hover{color:var(--text)}
+
+/* ── timeline ── */
+.tl{padding-bottom:36px}
+.tl-phase-band{
+  display:flex;align-items:center;gap:12px;
+  padding:20px 0 10px;position:relative;
+}
+.tl-phase-band::before{
+  content:'';position:absolute;left:7px;top:0;bottom:0;
+  width:2px;background:var(--border);
+}
+.tl-phase-dot{
+  width:16px;height:16px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--bg);z-index:1;position:relative;
+}
+.tl-phase-name{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+.tl-phase-range{font-size:9px;color:var(--dim);margin-left:auto}
+
+.tl-items{position:relative;padding-left:0}
+.tl-items::before{
+  content:'';position:absolute;left:7px;top:0;bottom:0;
+  width:2px;background:var(--border);
+}
+.tl-item{
+  display:flex;align-items:flex-start;gap:14px;padding:7px 0;
+  cursor:pointer;
+}
+.tl-item:hover .tl-content{opacity:.8}
+.tl-dot-wrap{width:16px;flex-shrink:0;display:flex;justify-content:center;padding-top:3px;position:relative;z-index:1}
+.tl-dot{border-radius:50%;flex-shrink:0}
+.tl-dot.ev{width:10px;height:10px;border:2px solid var(--bg)}
+.tl-dot.log{width:6px;height:6px;background:var(--dim);margin:2px}
+.tl-content{flex:1;min-width:0}
+.tl-name{font-size:11px;color:var(--text);font-weight:500;line-height:1.4}
+.tl-text{font-size:11px;color:var(--muted);line-height:1.45;word-break:break-word}
+.tl-meta{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:0.03em;font-variant-numeric:tabular-nums}
+.tl-empty{font-size:11px;color:var(--dim);padding:24px 0 12px 30px;letter-spacing:0.03em}
+.tl-now-marker{
+  display:flex;align-items:center;gap:12px;padding:10px 0;position:relative;
+}
+.tl-now-marker::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-now-dot{width:16px;height:16px;border-radius:50%;background:var(--now);border:2px solid var(--bg);flex-shrink:0;position:relative;z-index:1;box-shadow:0 0 8px var(--now-glow)}
+.tl-now-label{font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--now)}
+
+/* responsive */
+@media(max-width:520px){
+  body{padding-inline:14px;padding-block:24px 60px}
+  .hd-actions .hd-btn span{display:none}
+  .wk{width:6px;height:6px}
+  .ph-strip{display:none}.yl{display:none}
+  .cells{gap:1px}.rows{gap:1px}
+  .add-form{flex-direction:column}
+  .add-form .field,.add-form .field.grow{width:100%}
+  input[type="date"],input[type="text"]{width:100%}
+  .wp{width:100%;border-left:none;border-top:1px solid var(--border)}
+}
+</style>
+
+<!-- week panel backdrop -->
+<div class="wp-bg" id="wpBg"></div>
+
+<!-- week panel -->
+<div class="wp" id="wp">
+  <div class="wp-head">
+    <div class="wp-title">
+      <div class="wp-date" id="wpDate"></div>
+      <div class="wp-meta" id="wpMeta"></div>
+    </div>
+    <button class="wp-x" id="wpClose">×</button>
+  </div>
+  <div class="wp-body" id="wpBody"></div>
+  <div class="wp-add">
+    <div class="mood-row">
+      <span class="mood-lbl">Mood</span>
+      <div class="mood-pick" id="wpMoodPick">
+        <div class="mood-dot" data-m="1" title="Rough"></div>
+        <div class="mood-dot" data-m="2" title="Hard"></div>
+        <div class="mood-dot" data-m="3" title="Okay"></div>
+        <div class="mood-dot" data-m="4" title="Good"></div>
+        <div class="mood-dot" data-m="5" title="Great"></div>
+      </div>
+    </div>
+    <textarea id="wpNote" placeholder="Write a note for this week…" rows="3"></textarea>
+    <div class="tag-input-row">
+      <span class="tag-input-lbl">Tags</span>
+      <input type="text" id="wpTagsIn" class="tag-in" placeholder="travel work health…" maxlength="120">
+    </div>
+    <div class="wp-add-foot">
+      <span class="wp-add-hint">⌘↵ to save</span>
+      <button class="wp-save" id="wpSave">Add note</button>
+    </div>
+  </div>
+</div>
+
+<!-- search overlay -->
+<div class="search-overlay" id="searchOverlay" hidden>
+  <div class="search-box">
+    <div class="search-input-row">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" id="searchInput" placeholder="Search events and notes…" autocomplete="off" spellcheck="false">
+      <button class="search-x" id="searchClose">×</button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="search-hint">Type to search across all events and notes</div>
+    </div>
+  </div>
+</div>
+
+<!-- export / import overlay -->
+<div class="io-overlay" id="ioOverlay" hidden>
+  <div class="io-box">
+    <div class="io-title" id="ioTitle">Export data</div>
+    <textarea class="io-ta" id="ioTa" spellcheck="false"></textarea>
+    <div class="io-actions">
+      <button class="btn-add" id="ioCopy">Copy</button>
+      <button class="btn-add" id="ioApply" hidden>Apply</button>
+      <button class="io-close-btn" id="ioClose">Close</button>
+      <span class="io-msg" id="ioMsg"></span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="hd">
+    <div class="hd-left">
+      <h1>Life in Weeks</h1>
+      <p class="byline" id="byline">70 years · 3,640 weeks</p>
+    </div>
+    <div class="hd-actions">
+      <button class="hd-btn" id="btnSearch">Search <kbd style="font-size:8px;opacity:.6">⌘K</kbd></button>
+      <button class="hd-btn" id="btnExport"><span>Export</span> ↗</button>
+      <button class="hd-btn" id="btnImport"><span>Import</span> ↙</button>
+      <button class="tbtn" id="tbtn">◑</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="field">
+      <label for="dob">Date of birth</label>
+      <input type="date" id="dob">
+    </div>
+    <div class="field">
+      <label for="ls">Life expectancy</label>
+      <input type="number" id="ls" value="70" min="10" max="150">
+    </div>
+  </div>
+
+  <div class="stats-bar" id="stats"></div>
+
+  <div class="view-toggle">
+    <button class="vt-btn act" id="btnVGrid">Weeks</button>
+    <button class="vt-btn" id="btnVTimeline">Timeline</button>
+  </div>
+
+  <div id="viewGrid">
+  <div class="legend">
+    <div class="li"><div class="ld past"></div>lived</div>
+    <div class="li"><div class="ld now"></div>now</div>
+    <div class="li"><div class="ld fut"></div>ahead</div>
+    <div class="li"><div class="ld ph"></div>phase</div>
+    <div class="li"><div class="ld ev"></div>event</div>
+    <div class="li"><div class="ld lg"></div>log</div>
+  </div>
+
+  <div class="grid-scroll">
+    <div class="rows" id="grid"></div>
+  </div>
+
+  </div><!-- /viewGrid -->
+
+  <div id="viewTimeline" class="tl" hidden></div>
+
+  <div class="panel-tabs">
+    <button class="ptab act" id="tabP">Phases</button>
+    <button class="ptab" id="tabE">Events</button>
+    <button class="ptab" id="tabL">Log</button>
+  </div>
+
+  <div class="panel-body" id="panelP">
+    <div class="item-list" id="phList"></div>
+    <div class="add-form">
+      <div class="field grow"><label>Name</label><input type="text" id="pName" placeholder="e.g. College" maxlength="40"></div>
+      <div class="field"><label>Start age</label><input type="number" class="age" id="pStart" value="18" min="0" max="149"></div>
+      <div class="field"><label>End age</label><input type="number" class="age" id="pEnd" value="22" min="1" max="150"></div>
+      <div class="field"><label>Color</label><div class="swatches" id="pSw"></div></div>
+      <button class="btn-add" id="btnP">Add</button>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panelE" hidden>
+    <div class="item-list" id="evList"></div>
+    <div class="add-form">
+      <div class="field grow"><label>Name</label><input type="text" id="eName" placeholder="e.g. Moved to NYC" maxlength="40"></div>
+      <div class="field"><label>Date</label><input type="date" id="eDate"></div>
+      <div class="field"><label>Color</label><div class="swatches" id="eSw"></div></div>
+      <button class="btn-add" id="btnE">Add</button>
+    </div>
+  </div>
+
+  <div class="panel-body" id="panelL" hidden>
+    <div class="item-list" id="logList"></div>
+    <div class="add-form">
+      <div class="field"><label>Date</label><input type="date" id="lDate"></div>
+      <div class="field grow"><label>Note — or click any week above</label><input type="text" id="lText" placeholder="Write a note…" maxlength="400"></div>
+      <div class="field"><label>Tags</label><input type="text" id="lTags" class="tag-in" placeholder="travel work…" maxlength="120" style="width:140px"></div>
+      <button class="btn-add" id="btnL">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── tag helpers ── */
+function parseTags(str){
+  return [...new Set(str.split(/[\s,#]+/).map(t=>t.toLowerCase().trim()).filter(t=>t&&t.length<=30))];
+}
+function renderTagChips(tags, container, onclick){
+  tags.forEach(t=>{
+    const c=document.createElement('span');
+    c.className='tag-chip'+(onclick?' btn':'');
+    c.textContent='#'+t;
+    if(onclick) c.addEventListener('click',()=>onclick(t));
+    container.appendChild(c);
+  });
+}
+let activeTagFilter = null;
+
+/* ── mood helpers ── */
+const MOOD_COLORS = ['','#EF4444','#F97316','#6B7280','#3B82F6','#22C55E'];
+const MOOD_LABELS = ['','Rough','Hard','Okay','Good','Great'];
+const MOOD_BG_DARK  = ['','#5C1515','#5C3300',null,'#152870','#0A4D2E'];
+const MOOD_BG_LIGHT = ['','#9B2020','#995000',null,'#154EB0','#0E7048'];
+function moodBg(score){
+  const dark = document.documentElement.getAttribute('data-theme')==='light'?false:true;
+  return (dark?MOOD_BG_DARK:MOOD_BG_LIGHT)[score]||null;
+}
+function buildMoodPicker(container, getM, setM){
+  container.querySelectorAll('.mood-dot').forEach(d=>{
+    const m=parseInt(d.dataset.m);
+    d.classList.toggle('sel', getM()===m);
+    d.onclick=()=>{ setM(getM()===m?null:m); buildMoodPicker(container,getM,setM); };
+  });
+}
+
+/* ── storage ── */
+const STORE = 'liw-v3';
+function save() {
+  try { localStorage.setItem(STORE, JSON.stringify({ dob: dobEl.value, ls: lsEl.value, phases, events, logs })); } catch(e) {}
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (!d) return false;
+    if (d.dob) dobEl.value = d.dob;
+    if (d.ls)  lsEl.value  = d.ls;
+    if (Array.isArray(d.phases) && d.phases.length) phases = d.phases;
+    if (Array.isArray(d.events)) events = d.events;
+    if (Array.isArray(d.logs))   logs   = d.logs;
+    return true;
+  } catch(e) { return false; }
+}
+
+const COLORS = ['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899','#06B6D4','#84CC16','#F97316','#14B8A6'];
+const uid = () => Math.random().toString(36).slice(2,9);
+
+let phases = [
+  {id:uid(),name:'Childhood',sa:0,ea:13,c:'#3B82F6'},
+  {id:uid(),name:'Adolescence',sa:13,ea:18,c:'#8B5CF6'},
+  {id:uid(),name:'Young Adulthood',sa:18,ea:36,c:'#10B981'},
+  {id:uid(),name:'Midlife',sa:36,ea:56,c:'#F59E0B'},
+  {id:uid(),name:'Later Life',sa:56,ea:90,c:'#EF4444'},
+];
+let events = [];
+let logs   = [];
+let pCol = COLORS[2], eCol = COLORS[4];
+let activeLogDateInput = null;
+let selectedCell = null, selectedIdx = -1;
+let currentView = 'grid';
+
+const dobEl   = document.getElementById('dob');
+const lsEl    = document.getElementById('ls');
+const gridEl  = document.getElementById('grid');
+const root    = document.documentElement;
+
+/* ── boot ── */
+const def = new Date(); def.setFullYear(def.getFullYear() - 32);
+dobEl.value = def.toISOString().split('T')[0];
+document.getElementById('lDate').value = new Date().toISOString().split('T')[0];
+try { root.setAttribute('data-theme', localStorage.getItem('liw-theme') || 'dark'); }
+catch(e) { root.setAttribute('data-theme','dark'); }
+load();
+
+/* ── theme ── */
+document.getElementById('tbtn').addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('liw-theme', next); } catch(e) {}
+  render();
+});
+
+/* ── tabs ── */
+const tabP=document.getElementById('tabP'),tabE=document.getElementById('tabE'),tabL=document.getElementById('tabL');
+const panelP=document.getElementById('panelP'),panelE=document.getElementById('panelE'),panelL=document.getElementById('panelL');
+function showTab(t,p){
+  [tabP,tabE,tabL].forEach(x=>x.classList.remove('act'));
+  [panelP,panelE,panelL].forEach(x=>x.hidden=true);
+  t.classList.add('act'); p.hidden=false;
+}
+tabP.addEventListener('click',()=>showTab(tabP,panelP));
+tabE.addEventListener('click',()=>showTab(tabE,panelE));
+tabL.addEventListener('click',()=>showTab(tabL,panelL));
+
+/* ── swatches ── */
+function buildSw(el,getC,setC){
+  el.innerHTML='';
+  COLORS.forEach(c=>{
+    const s=document.createElement('div');
+    s.className='sw'+(c===getC()?' sel':'');
+    s.style.background=c;
+    s.addEventListener('click',()=>{setC(c);buildSw(el,getC,setC);});
+    el.appendChild(s);
+  });
+}
+buildSw(document.getElementById('pSw'),()=>pCol,c=>pCol=c);
+buildSw(document.getElementById('eSw'),()=>eCol,c=>eCol=c);
+
+/* ── helpers ── */
+const MS_WEEK = 7*24*60*60*1000;
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(iso){
+  return new Date(iso+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+const phaseAt = y => phases.find(p=>y>=p.sa&&y<p.ea)||null;
+
+/* ── week panel ── */
+const wp   = document.getElementById('wp');
+const wpBg = document.getElementById('wpBg');
+let wpIdx  = -1, wpIso = '';
+
+function openWeekPanel(idx, y, w, iso, dob, evMap, logMap){
+  wpIdx = idx; wpIso = iso;
+  const d = new Date(iso+'T00:00:00');
+  document.getElementById('wpDate').textContent = d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('wpMeta').textContent = `Age ${y}  ·  Week ${w+1} of the year`;
+
+  const body = document.getElementById('wpBody');
+  body.innerHTML = '';
+
+  // Phase
+  const ph = phaseAt(y);
+  if(ph){
+    const sec = document.createElement('div');
+    sec.className = 'wp-section';
+    sec.innerHTML = `<div class="wp-sec-label">Phase</div>`;
+    const chip = document.createElement('div');
+    chip.className = 'wp-phase-chip';
+    chip.innerHTML = `<div class="wp-phase-dot" style="background:${ph.c}"></div><span>${ph.name}</span>`;
+    sec.appendChild(chip);
+    body.appendChild(sec);
+  }
+
+  // Events
+  const evs = evMap[idx]||[];
+  if(evs.length){
+    const sec = document.createElement('div');
+    sec.className = 'wp-section';
+    sec.innerHTML = `<div class="wp-sec-label">Events</div>`;
+    evs.forEach(ev=>{
+      const row = document.createElement('div');
+      row.className = 'wp-ev-row';
+      row.innerHTML = `<div class="wp-ev-dot" style="background:${ev.c}"></div><span>${ev.name}</span>`;
+      sec.appendChild(row);
+    });
+    body.appendChild(sec);
+  }
+
+  // Logs
+  renderWpLogs(body, idx, logMap);
+
+  document.getElementById('wpNote').value = '';
+  resetWpMood();
+  wp.classList.add('open');
+  wpBg.classList.add('on');
+  setTimeout(()=>document.getElementById('wpNote').focus(),240);
+}
+
+function renderWpLogs(container, idx, logMap){
+  // remove existing logs section if any
+  const old = container.querySelector('.wp-logs-sec');
+  if(old) old.remove();
+
+  const lgs = (logMap||currentLogMap)[idx]||[];
+  const sec = document.createElement('div');
+  sec.className = 'wp-section wp-logs-sec';
+
+  const label = document.createElement('div');
+  label.className = 'wp-sec-label';
+  label.textContent = lgs.length ? `Notes (${lgs.length})` : 'Notes';
+  sec.appendChild(label);
+
+  if(!lgs.length){
+    const e = document.createElement('div');
+    e.className = 'wp-empty';
+    e.textContent = 'No notes for this week yet.';
+    sec.appendChild(e);
+  } else {
+    const sorted = [...lgs].sort((a,b)=>a.date.localeCompare(b.date));
+    sorted.forEach(lg=>{
+      const row = document.createElement('div');
+      row.className = 'wp-log-row';
+
+      function showLogView(){
+        row.innerHTML='';
+        const txt = document.createElement('div');
+        txt.className='wp-log-text';
+        txt.textContent=lg.text;
+        const acts = document.createElement('div');
+        acts.className='wp-log-actions';
+        const dt = document.createElement('span');
+        dt.className='wp-log-date';
+        if(lg.mood){
+          const mi=document.createElement('span');
+          mi.className='mood-indicator';
+          mi.style.background=MOOD_COLORS[lg.mood];
+          mi.title=MOOD_LABELS[lg.mood];
+          dt.appendChild(mi);
+        }
+        dt.appendChild(document.createTextNode(fmtDate(lg.date)));
+        const editBtn = document.createElement('button');
+        editBtn.className='wp-log-btn';
+        editBtn.textContent='edit';
+        editBtn.addEventListener('click', showLogEdit);
+        const delBtn = document.createElement('button');
+        delBtn.className='wp-log-btn del';
+        delBtn.textContent='delete';
+        delBtn.addEventListener('click',()=>{
+          logs = logs.filter(x=>x.id!==lg.id);
+          save(); renderLogList(); render();
+          // rebuild logMap and re-render logs section
+          const dob = dobEl.value ? new Date(dobEl.value+'T00:00:00') : null;
+          if(dob) renderWpLogs(container, idx, buildLogMap(dob, parseInt(lsEl.value)||70));
+        });
+        acts.append(dt, editBtn, delBtn);
+        row.append(txt, acts);
+        // tag chips
+        if(lg.tags?.length){
+          const tc=document.createElement('div'); tc.className='tags-chips';
+          renderTagChips(lg.tags,tc,t=>{ activeTagFilter=t; switchView('timeline'); });
+          row.appendChild(tc);
+        }
+      }
+
+      function showLogEdit(){
+        row.innerHTML='';
+        let editMood = lg.mood||null;
+        const edit = document.createElement('div');
+        edit.className='wp-log-edit';
+        // mood picker in edit
+        const moodRowEl = document.createElement('div');
+        moodRowEl.className='mood-row';
+        moodRowEl.innerHTML=`<span class="mood-lbl">Mood</span><div class="mood-pick">${[1,2,3,4,5].map(m=>`<div class="mood-dot${editMood===m?' sel':''}" data-m="${m}" title="${MOOD_LABELS[m]}"></div>`).join('')}</div>`;
+        moodRowEl.querySelectorAll('.mood-dot').forEach(d=>{
+          d.addEventListener('click',()=>{
+            const m=parseInt(d.dataset.m);
+            editMood=editMood===m?null:m;
+            moodRowEl.querySelectorAll('.mood-dot').forEach(x=>x.classList.toggle('sel',parseInt(x.dataset.m)===editMood));
+          });
+        });
+        const ta = document.createElement('textarea');
+        ta.value=lg.text; ta.rows=3;
+        ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))saveEdit();if(e.key==='Escape')showLogView();});
+        // tag input in edit
+        const tagRow=document.createElement('div'); tagRow.className='tag-input-row';
+        const tagLbl=document.createElement('span'); tagLbl.className='tag-input-lbl'; tagLbl.textContent='Tags';
+        const tagIn=document.createElement('input'); tagIn.type='text'; tagIn.className='tag-in';
+        tagIn.value=(lg.tags||[]).join(' '); tagIn.placeholder='travel work…'; tagIn.maxLength=120;
+        tagRow.append(tagLbl,tagIn);
+        const actDiv = document.createElement('div');
+        actDiv.className='wp-log-edit-actions';
+        const sv=document.createElement('button');
+        sv.className='log-save-btn';sv.textContent='Save';
+        const cn=document.createElement('button');
+        cn.className='log-cancel-btn';cn.textContent='Cancel';
+        function saveEdit(){
+          const t=ta.value.trim();if(!t)return;
+          lg.text=t;
+          if(editMood) lg.mood=editMood; else delete lg.mood;
+          const tags=parseTags(tagIn.value);
+          if(tags.length) lg.tags=tags; else delete lg.tags;
+          save(); renderLogList(); render();
+          if(currentView==='timeline')renderTimeline();
+          showLogView();
+        }
+        sv.addEventListener('click',saveEdit);
+        cn.addEventListener('click',showLogView);
+        actDiv.append(sv,cn);
+        edit.append(moodRowEl,ta,tagRow,actDiv);
+        row.appendChild(edit);
+        ta.focus(); ta.selectionStart=ta.selectionEnd=ta.value.length;
+      }
+
+      showLogView();
+      sec.appendChild(row);
+    });
+  }
+  container.appendChild(sec);
+}
+
+function closeWeekPanel(){
+  wp.classList.remove('open');
+  wpBg.classList.remove('on');
+  if(selectedCell){ selectedCell.classList.remove('sel'); selectedCell=null; }
+  selectedIdx = -1; wpIdx = -1;
+}
+
+document.getElementById('wpClose').addEventListener('click', closeWeekPanel);
+wpBg.addEventListener('click', closeWeekPanel);
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'&&wp.classList.contains('open')) closeWeekPanel();
+});
+
+// Week panel mood picker
+let wpMood = null;
+buildMoodPicker(document.getElementById('wpMoodPick'), ()=>wpMood, m=>{wpMood=m;});
+document.getElementById('wp').addEventListener('click', e=>{
+  const d = e.target.closest('#wpMoodPick .mood-dot');
+  if(!d) return;
+  const m = parseInt(d.dataset.m);
+  wpMood = wpMood===m ? null : m;
+  buildMoodPicker(document.getElementById('wpMoodPick'), ()=>wpMood, m2=>{wpMood=m2;});
+});
+
+// Reset mood when week panel opens
+function resetWpMood(){ wpMood=null; buildMoodPicker(document.getElementById('wpMoodPick'),()=>wpMood,m=>{wpMood=m;}); }
+
+// Save note from week panel
+let currentLogMap = {};
+document.getElementById('wpSave').addEventListener('click', ()=>{
+  const text = document.getElementById('wpNote').value.trim();
+  if(!text||!wpIso) return;
+  const entry = {id:uid(), date:wpIso, text};
+  if(wpMood) entry.mood = wpMood;
+  const tagStr = document.getElementById('wpTagsIn').value;
+  const tags = parseTags(tagStr);
+  if(tags.length) entry.tags = tags;
+  logs.push(entry);
+  document.getElementById('wpNote').value='';
+  document.getElementById('wpTagsIn').value='';
+  resetWpMood();
+  save(); renderLogList(); render();
+  if(currentView==='timeline')renderTimeline();
+  const dob = dobEl.value ? new Date(dobEl.value+'T00:00:00') : null;
+  if(dob){
+    currentLogMap = buildLogMap(dob, parseInt(lsEl.value)||70);
+    renderWpLogs(document.getElementById('wpBody'), wpIdx, currentLogMap);
+  }
+});
+document.getElementById('wpNote').addEventListener('keydown', e=>{
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) document.getElementById('wpSave').click();
+});
+
+function buildLogMap(dob, lifespan){
+  const total = lifespan*52;
+  const map = {};
+  logs.forEach(lg=>{
+    if(!lg.date)return;
+    const wi = Math.floor((new Date(lg.date+'T00:00:00')-dob)/MS_WEEK);
+    if(wi>=0&&wi<total)(map[wi]=map[wi]||[]).push(lg);
+  });
+  return map;
+}
+
+/* ── render grid ── */
+function render(){
+  const dobVal   = dobEl.value;
+  const lifespan = Math.max(10,Math.min(150,parseInt(lsEl.value)||70));
+  const total    = lifespan*52;
+  const byline   = document.getElementById('byline');
+  byline.textContent = `${lifespan} years · ${total.toLocaleString()} weeks`;
+
+  const dob   = dobVal ? new Date(dobVal+'T00:00:00') : null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const curW  = dob ? Math.floor((today-dob)/MS_WEEK) : -1;
+
+  const evMap = {};
+  if(dob) events.forEach(ev=>{
+    if(!ev.date)return;
+    const wi=Math.floor((new Date(ev.date+'T00:00:00')-dob)/MS_WEEK);
+    if(wi>=0&&wi<total)(evMap[wi]=evMap[wi]||[]).push(ev);
+  });
+
+  const logMap = {};
+  const moodMap = {};
+  if(dob) logs.forEach(lg=>{
+    if(!lg.date)return;
+    const wi=Math.floor((new Date(lg.date+'T00:00:00')-dob)/MS_WEEK);
+    if(wi>=0&&wi<total){
+      (logMap[wi]=logMap[wi]||[]).push(lg);
+      if(lg.mood)(moodMap[wi]=moodMap[wi]||[]).push(lg.mood);
+    }
+  });
+  currentLogMap = logMap;
+
+  gridEl.innerHTML='';
+  for(let y=0;y<lifespan;y++){
+    const ph  = phaseAt(y);
+    const row = document.createElement('div');
+    row.className='row';
+
+    const yl = document.createElement('div');
+    const isLabeled = y%10===0||y===lifespan-1;
+    yl.className='yl'+(y%10===0?' dec':'');
+    yl.textContent = isLabeled?y:'';
+    yl.title=`Set life expectancy to ${y}`;
+    yl.addEventListener('mouseenter',()=>{ if(!isLabeled)yl.textContent=y; });
+    yl.addEventListener('mouseleave',()=>{ if(!isLabeled)yl.textContent=''; });
+    yl.addEventListener('click',()=>{ lsEl.value=Math.max(y,1); save(); render(); });
+    row.appendChild(yl);
+
+    const strip=document.createElement('div');
+    strip.className='ph-strip';
+    if(ph)strip.style.background=ph.c;
+    row.appendChild(strip);
+
+    const cells=document.createElement('div');
+    cells.className='cells';
+    for(let w=0;w<52;w++){
+      const idx  = y*52+w;
+      const cell = document.createElement('div');
+      cell.className='wk';
+      if(dob){
+        if(idx<curW)        cell.classList.add('past');
+        else if(idx===curW) cell.classList.add('now');
+        else                cell.classList.add('fut');
+      } else cell.classList.add('fut');
+
+      if(evMap[idx]?.length){ cell.classList.add('has-ev'); cell.style.setProperty('--ev-c',evMap[idx][0].c); }
+      if(logMap[idx]?.length) cell.classList.add('has-log');
+      if(idx===selectedIdx)   cell.classList.add('sel');
+      // mood color override on past cells
+      if(moodMap[idx]?.length && idx<curW){
+        const avg = Math.round(moodMap[idx].reduce((s,m)=>s+m,0)/moodMap[idx].length);
+        const bg = moodBg(avg);
+        if(bg) cell.style.background = bg;
+      }
+
+      cell.addEventListener('click',()=>{
+        if(!dob) return;
+        const iso = new Date(dob.getTime()+idx*MS_WEEK).toISOString().split('T')[0];
+
+        if(activeLogDateInput){ activeLogDateInput.value=iso; showTab(tabL,panelL); return; }
+
+        // toggle or open
+        if(selectedCell===cell){
+          closeWeekPanel(); return;
+        }
+        if(selectedCell){ selectedCell.classList.remove('sel'); }
+        selectedCell=cell; selectedIdx=idx;
+        cell.classList.add('sel');
+        openWeekPanel(idx,y,w,iso,dob,evMap,logMap);
+      });
+      cells.appendChild(cell);
+    }
+    row.appendChild(cells);
+    gridEl.appendChild(row);
+  }
+
+  // stats bar
+  const statsEl=document.getElementById('stats');
+  statsEl.innerHTML='';
+  if(dob){
+    const lived=Math.max(0,Math.min(curW,total));
+    const ahead=Math.max(0,total-lived-1);
+    const pct=((lived/total)*100).toFixed(1);
+    [{v:lived.toLocaleString(),l:'weeks lived'},{v:ahead.toLocaleString(),l:'ahead'},{v:pct+'%',l:'elapsed'}].forEach((s,i)=>{
+      const el=document.createElement('div');
+      el.className='sstat';
+      el.innerHTML=`<strong>${s.v}</strong> ${s.l}`;
+      statsEl.appendChild(el);
+    });
+  }
+}
+
+/* ── phases ── */
+function renderPhases(){
+  const list=document.getElementById('phList');
+  list.innerHTML='';
+  if(!phases.length){list.innerHTML='<div class="empty-hint">No phases yet.</div>';return;}
+  phases.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='item';
+    el.innerHTML=`<div class="item-swatch" style="background:${p.c}"></div><div class="item-name">${p.name}</div><div class="item-range">age ${p.sa}–${p.ea}</div><button class="item-del" title="Remove">×</button>`;
+    el.querySelector('.item-del').addEventListener('click',()=>{phases=phases.filter(x=>x.id!==p.id);save();renderPhases();render();});
+    list.appendChild(el);
+  });
+}
+document.getElementById('btnP').addEventListener('click',()=>{
+  const name=document.getElementById('pName').value.trim();
+  const sa=parseInt(document.getElementById('pStart').value);
+  const ea=parseInt(document.getElementById('pEnd').value);
+  if(!name||isNaN(sa)||isNaN(ea)||sa>=ea)return;
+  phases.push({id:uid(),name,sa,ea,c:pCol});
+  document.getElementById('pName').value='';
+  save();renderPhases();render();
+});
+
+/* ── events ── */
+function renderEvents(){
+  const list=document.getElementById('evList');
+  list.innerHTML='';
+  if(!events.length){list.innerHTML='<div class="empty-hint">No events yet — add one below and it will appear on the grid.</div>';return;}
+  events.forEach(ev=>{
+    const el=document.createElement('div');
+    el.className='item';
+    el.innerHTML=`<div class="item-swatch" style="background:${ev.c}"></div><div class="item-name">${ev.name}</div><div class="item-range">${ev.date?fmtDate(ev.date):'—'}</div><button class="item-del" title="Remove">×</button>`;
+    el.querySelector('.item-del').addEventListener('click',()=>{events=events.filter(x=>x.id!==ev.id);save();renderEvents();render();if(currentView==='timeline')renderTimeline();});
+    list.appendChild(el);
+  });
+}
+document.getElementById('btnE').addEventListener('click',()=>{
+  const name=document.getElementById('eName').value.trim();
+  const date=document.getElementById('eDate').value;
+  if(!name||!date)return;
+  events.push({id:uid(),name,date,c:eCol});
+  document.getElementById('eName').value='';
+  document.getElementById('eDate').value='';
+  save();renderEvents();render();if(currentView==='timeline')renderTimeline();
+});
+
+/* ── logs ── */
+function renderLogList(editId=null){
+  const list=document.getElementById('logList');
+  list.innerHTML=''; activeLogDateInput=null;
+  if(!logs.length){
+    list.innerHTML='<div class="empty-hint">No notes yet — click any week on the grid to journal in place, or add one below.</div>';
+    return;
+  }
+
+  // tag filter bar
+  const allTags=[...new Set(logs.flatMap(l=>l.tags||[]))].sort();
+  if(allTags.length){
+    const bar=document.createElement('div'); bar.className='tag-filter-bar';
+    const lbl=document.createElement('span'); lbl.className='tag-filter-lbl'; lbl.textContent='Filter';
+    bar.appendChild(lbl);
+    const allChip=document.createElement('span');
+    allChip.className='tag-chip btn'+(activeTagFilter===null?' act':'');
+    allChip.textContent='All';
+    allChip.addEventListener('click',()=>{ activeTagFilter=null; renderLogList(); });
+    bar.appendChild(allChip);
+    allTags.forEach(t=>{
+      const c=document.createElement('span');
+      c.className='tag-chip btn'+(activeTagFilter===t?' act':'');
+      c.textContent='#'+t;
+      c.addEventListener('click',()=>{ activeTagFilter=activeTagFilter===t?null:t; renderLogList(); });
+      bar.appendChild(c);
+    });
+    list.appendChild(bar);
+  }
+
+  const filtered = activeTagFilter
+    ? logs.filter(l=>(l.tags||[]).includes(activeTagFilter))
+    : logs;
+
+  if(!filtered.length){
+    const hint=document.createElement('div'); hint.className='empty-hint';
+    hint.textContent=`No notes tagged #${activeTagFilter}.`;
+    list.appendChild(hint); return;
+  }
+
+  const sorted=[...filtered].sort((a,b)=>b.date.localeCompare(a.date));
+  sorted.forEach(lg=>{
+    const wrap=document.createElement('div');
+    wrap.className='log-entry';
+
+    function showView(){
+      wrap.innerHTML=''; wrap.classList.remove('editing');
+      if(activeLogDateInput&&activeLogDateInput._owner===lg.id) activeLogDateInput=null;
+      const header=document.createElement('div');
+      header.className='log-entry-header';
+      const dt=document.createElement('span');
+      dt.className='log-entry-date';
+      if(lg.mood){const mi=document.createElement('span');mi.className='mood-indicator';mi.style.background=MOOD_COLORS[lg.mood];mi.title=MOOD_LABELS[lg.mood];dt.appendChild(mi);}
+      dt.appendChild(document.createTextNode(fmtDate(lg.date)));
+      const editBtn=document.createElement('button');
+      editBtn.className='log-edit-btn'; editBtn.textContent='✎'; editBtn.title='Edit';
+      editBtn.addEventListener('click',showEdit);
+      const del=document.createElement('button');
+      del.className='item-del'; del.textContent='×'; del.title='Delete';
+      del.addEventListener('click',()=>{logs=logs.filter(x=>x.id!==lg.id);save();renderLogList();render();if(currentView==='timeline')renderTimeline();});
+      header.append(dt,editBtn,del);
+      const txt=document.createElement('div');
+      txt.className='log-entry-text'; txt.textContent=lg.text;
+      txt.addEventListener('click',showEdit);
+      wrap.append(header,txt);
+      if(lg.tags?.length){
+        const tc=document.createElement('div'); tc.className='tags-chips';
+        renderTagChips(lg.tags,tc,t=>{activeTagFilter=t;renderLogList();});
+        wrap.appendChild(tc);
+      }
+    }
+
+    function showEdit(){
+      wrap.innerHTML=''; wrap.classList.add('editing');
+      const dateIn=document.createElement('input');
+      dateIn.type='date'; dateIn.value=lg.date; dateIn.className='log-edit-date';
+      dateIn._owner=lg.id; activeLogDateInput=dateIn;
+      const textIn=document.createElement('textarea');
+      textIn.value=lg.text; textIn.className='log-edit-text'; textIn.rows=3;
+      // tag input
+      const tagRow=document.createElement('div'); tagRow.className='tag-input-row';
+      const tagLbl=document.createElement('span'); tagLbl.className='tag-input-lbl'; tagLbl.textContent='Tags';
+      const tagIn=document.createElement('input'); tagIn.type='text'; tagIn.className='tag-in';
+      tagIn.value=(lg.tags||[]).join(' '); tagIn.placeholder='travel work…'; tagIn.maxLength=120;
+      tagRow.append(tagLbl,tagIn);
+      const acts=document.createElement('div'); acts.className='log-edit-actions';
+      const sv=document.createElement('button'); sv.className='log-save-btn'; sv.textContent='Save';
+      const cn=document.createElement('button'); cn.className='log-cancel-btn'; cn.textContent='Cancel';
+      sv.addEventListener('click',()=>{
+        const d=dateIn.value,t=textIn.value.trim();
+        if(!d||!t)return;
+        lg.date=d;lg.text=t;
+        const tags=parseTags(tagIn.value);
+        if(tags.length) lg.tags=tags; else delete lg.tags;
+        activeLogDateInput=null;
+        save();renderLogList();render();if(currentView==='timeline')renderTimeline();
+      });
+      cn.addEventListener('click',()=>{activeLogDateInput=null;showView();});
+      textIn.addEventListener('keydown',e=>{
+        if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))sv.click();
+        if(e.key==='Escape'){activeLogDateInput=null;showView();}
+      });
+      acts.append(sv,cn); wrap.append(dateIn,textIn,tagRow,acts);
+      textIn.focus(); textIn.selectionStart=textIn.selectionEnd=textIn.value.length;
+    }
+
+    showView();
+    list.appendChild(wrap);
+    if(editId===lg.id){showEdit();wrap.scrollIntoView({block:'nearest',behavior:'smooth'});}
+  });
+}
+document.getElementById('btnL').addEventListener('click',()=>{
+  const date=document.getElementById('lDate').value;
+  const text=document.getElementById('lText').value.trim();
+  if(!date||!text)return;
+  const entry={id:uid(),date,text};
+  const tags=parseTags(document.getElementById('lTags').value);
+  if(tags.length) entry.tags=tags;
+  logs.push(entry);
+  document.getElementById('lText').value='';
+  document.getElementById('lTags').value='';
+  save();renderLogList();render();if(currentView==='timeline')renderTimeline();
+});
+document.getElementById('lText').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))document.getElementById('btnL').click();
+});
+
+/* ── export / import ── */
+const ioOverlay=document.getElementById('ioOverlay');
+const ioTitle=document.getElementById('ioTitle');
+const ioTa=document.getElementById('ioTa');
+const ioMsg=document.getElementById('ioMsg');
+function openExport(){
+  ioTitle.textContent='Export — copy and save this JSON';
+  ioTa.value=JSON.stringify({ls:lsEl.value,phases,events,logs},null,2);
+  ioTa.readOnly=true;
+  document.getElementById('ioCopy').hidden=false;
+  document.getElementById('ioApply').hidden=true;
+  ioMsg.textContent=''; ioMsg.className='io-msg';
+  ioOverlay.hidden=false; ioTa.select();
+}
+function openImport(){
+  ioTitle.textContent='Import — paste your exported JSON';
+  ioTa.value=''; ioTa.readOnly=false;
+  document.getElementById('ioCopy').hidden=true;
+  document.getElementById('ioApply').hidden=false;
+  ioMsg.textContent=''; ioMsg.className='io-msg';
+  ioOverlay.hidden=false; ioTa.focus();
+}
+document.getElementById('btnExport').addEventListener('click',openExport);
+document.getElementById('btnImport').addEventListener('click',openImport);
+document.getElementById('ioCopy').addEventListener('click',()=>{
+  navigator.clipboard.writeText(ioTa.value).then(()=>{
+    ioMsg.textContent='Copied!'; ioMsg.className='io-msg';
+  }).catch(()=>{ ioTa.select(); ioMsg.textContent='Select all & copy (⌘A ⌘C)'; ioMsg.className='io-msg'; });
+});
+document.getElementById('ioApply').addEventListener('click',()=>{
+  try{
+    const d=JSON.parse(ioTa.value);
+    if(d.dob)dobEl.value=d.dob;
+    if(d.ls)lsEl.value=d.ls;
+    if(Array.isArray(d.phases)&&d.phases.length)phases=d.phases;
+    if(Array.isArray(d.events))events=d.events;
+    if(Array.isArray(d.logs))logs=d.logs;
+    save();renderPhases();renderEvents();renderLogList();render();
+    ioOverlay.hidden=true;
+  }catch(e){ioMsg.textContent='Invalid JSON — check and try again';ioMsg.className='io-msg err';}
+});
+document.getElementById('ioClose').addEventListener('click',()=>ioOverlay.hidden=true);
+ioOverlay.addEventListener('click',e=>{if(e.target===ioOverlay)ioOverlay.hidden=true;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ioOverlay.hidden)ioOverlay.hidden=true;});
+
+/* ── listeners ── */
+dobEl.addEventListener('change',()=>{save();render();if(currentView==='timeline')renderTimeline();});
+lsEl.addEventListener('change', ()=>{save();render();if(currentView==='timeline')renderTimeline();});
+
+/* ── search ── */
+const searchOverlay = document.getElementById('searchOverlay');
+const searchInput   = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+function openSearch(){
+  searchOverlay.hidden=false;
+  searchInput.value='';
+  searchResults.innerHTML='<div class="search-hint">Type to search across all events and notes</div>';
+  searchInput.focus();
+}
+function closeSearch(){ searchOverlay.hidden=true; }
+
+function doSearch(q){
+  const query = q.trim().toLowerCase();
+  if(!query){ searchResults.innerHTML='<div class="search-hint">Type to search across all events and notes</div>'; return; }
+
+  const dob = dobEl.value ? new Date(dobEl.value+'T00:00:00') : null;
+  const hits = [];
+
+  events.forEach(ev=>{
+    if(!ev.name.toLowerCase().includes(query)) return;
+    hits.push({type:'event', date:ev.date||'', label:ev.name, sub:'', ev});
+  });
+  logs.forEach(lg=>{
+    if(!lg.text.toLowerCase().includes(query)) return;
+    hits.push({type:'note', date:lg.date||'', label:lg.text, mood:lg.mood||null, lg});
+  });
+  hits.sort((a,b)=>b.date.localeCompare(a.date));
+
+  if(!hits.length){
+    searchResults.innerHTML=`<div class="search-empty">No results for "${q}"</div>`;
+    return;
+  }
+
+  searchResults.innerHTML='';
+  hits.slice(0,40).forEach(h=>{
+    const row = document.createElement('div');
+    row.className='search-result';
+
+    const type = document.createElement('div');
+    type.className='sr-type';
+    type.textContent = h.type==='event'?'Event':'Note';
+    if(h.type==='event') type.style.borderColor=h.ev.c;
+
+    const body = document.createElement('div');
+    body.className='sr-body';
+
+    const txt = document.createElement('div');
+    txt.className='sr-text';
+    // highlight match
+    const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    txt.innerHTML = h.label.replace(re,'<mark style="background:var(--now-glow);color:var(--now)">$1</mark>');
+
+    const meta = document.createElement('div');
+    meta.className='sr-meta';
+    if(h.mood){
+      const mi=document.createElement('span');
+      mi.className='mood-indicator';
+      mi.style.background=MOOD_COLORS[h.mood];
+      mi.title=MOOD_LABELS[h.mood];
+      meta.appendChild(mi);
+    }
+    let metaTxt = h.date ? fmtDate(h.date) : 'No date';
+    if(dob&&h.date){
+      const ageD=(new Date(h.date+'T00:00:00')-dob)/1000/60/60/24/365.25;
+      if(ageD>=0) metaTxt+=`  ·  Age ${Math.floor(ageD)}`;
+    }
+    meta.appendChild(document.createTextNode(metaTxt));
+    body.append(txt, meta);
+    row.append(type, body);
+
+    row.addEventListener('click',()=>{
+      closeSearch();
+      if(!dob||!h.date)return;
+      const wi=Math.floor((new Date(h.date+'T00:00:00')-dob)/MS_WEEK);
+      const y=Math.floor(wi/52), w=wi%52;
+      const iso=new Date(dob.getTime()+wi*MS_WEEK).toISOString().split('T')[0];
+      const ls=parseInt(lsEl.value)||70, total=ls*52;
+      const evMap={},logMap={};
+      events.forEach(ev=>{if(!ev.date)return;const i=Math.floor((new Date(ev.date+'T00:00:00')-dob)/MS_WEEK);if(i>=0&&i<total)(evMap[i]=evMap[i]||[]).push(ev);});
+      logs.forEach(lg=>{if(!lg.date)return;const i=Math.floor((new Date(lg.date+'T00:00:00')-dob)/MS_WEEK);if(i>=0&&i<total)(logMap[i]=logMap[i]||[]).push(lg);});
+      if(currentView==='timeline') switchView('grid');
+      if(selectedCell) selectedCell.classList.remove('sel');
+      selectedIdx=wi;
+      openWeekPanel(wi,y,w,iso,dob,evMap,logMap);
+    });
+
+    searchResults.appendChild(row);
+  });
+}
+
+document.getElementById('btnSearch').addEventListener('click', openSearch);
+searchInput.addEventListener('input', ()=>doSearch(searchInput.value));
+document.getElementById('searchClose').addEventListener('click', closeSearch);
+searchOverlay.addEventListener('click', e=>{ if(e.target===searchOverlay) closeSearch(); });
+document.addEventListener('keydown', e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){ e.preventDefault(); openSearch(); }
+  if(e.key==='Escape'&&!searchOverlay.hidden) closeSearch();
+});
+
+/* ── view toggle ── */
+const viewGrid     = document.getElementById('viewGrid');
+const viewTimeline = document.getElementById('viewTimeline');
+const btnVGrid     = document.getElementById('btnVGrid');
+const btnVTimeline = document.getElementById('btnVTimeline');
+function switchView(v){
+  currentView = v;
+  if(v==='grid'){
+    viewGrid.hidden=false; viewTimeline.hidden=true;
+    btnVGrid.classList.add('act'); btnVTimeline.classList.remove('act');
+  } else {
+    viewGrid.hidden=true; viewTimeline.hidden=false;
+    btnVGrid.classList.remove('act'); btnVTimeline.classList.add('act');
+    renderTimeline();
+  }
+}
+btnVGrid.addEventListener('click',()=>switchView('grid'));
+btnVTimeline.addEventListener('click',()=>switchView('timeline'));
+
+/* ── timeline ── */
+function renderTimeline(){
+  const tlEl = document.getElementById('viewTimeline');
+  tlEl.innerHTML='';
+  const dobVal = dobEl.value;
+  if(!dobVal){
+    tlEl.innerHTML='<div class="tl-empty">Set your date of birth to see your timeline.</div>';return;
+  }
+  if(!events.length&&!logs.length){
+    tlEl.innerHTML='<div class="tl-empty">No events or notes yet — add some to see them here.</div>';return;
+  }
+
+  const dob = new Date(dobVal+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const lifespan = parseInt(lsEl.value)||70;
+
+  // Tag filter bar
+  const allTags=[...new Set(logs.flatMap(l=>l.tags||[]))].sort();
+  if(allTags.length){
+    const bar=document.createElement('div'); bar.className='tag-filter-bar';
+    const lbl=document.createElement('span'); lbl.className='tag-filter-lbl'; lbl.textContent='Filter';
+    bar.appendChild(lbl);
+    const allChip=document.createElement('span');
+    allChip.className='tag-chip btn'+(activeTagFilter===null?' act':'');
+    allChip.textContent='All';
+    allChip.addEventListener('click',()=>{ activeTagFilter=null; renderTimeline(); });
+    bar.appendChild(allChip);
+    allTags.forEach(t=>{
+      const c=document.createElement('span');
+      c.className='tag-chip btn'+(activeTagFilter===t?' act':'');
+      c.textContent='#'+t;
+      c.addEventListener('click',()=>{ activeTagFilter=activeTagFilter===t?null:t; renderTimeline(); });
+      bar.appendChild(c);
+    });
+    tlEl.appendChild(bar);
+  }
+
+  // Build items list: events + logs, each with {type, date, data}
+  const items = [];
+  events.forEach(ev=>{ if(ev.date) items.push({type:'ev',date:ev.date,data:ev}); });
+  const filteredLogs = activeTagFilter
+    ? logs.filter(l=>(l.tags||[]).includes(activeTagFilter))
+    : logs;
+  filteredLogs.forEach(lg=>{ if(lg.date) items.push({type:'log',date:lg.date,data:lg}); });
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+
+  if(!items.length){
+    const msg = activeTagFilter ? `No notes tagged #${activeTagFilter}.` : 'No events or notes yet — add some to see them here.';
+    tlEl.innerHTML=`<div class="tl-empty">${msg}</div>`;return;
+  }
+
+  // Group items by phase (by age at their date)
+  function ageAt(iso){
+    const ms = new Date(iso+'T00:00:00')-dob;
+    return ms/1000/60/60/24/365.25;
+  }
+
+  // Walk through phases in start-age order, inserting items
+  const phasesSorted = [...phases].sort((a,b)=>a.sa-b.sa);
+
+  // Collect all phase start ages and item dates into a merged pass
+  // We'll render per-phase groups
+  const groups = []; // [{ph, items:[]}]
+  const phNone = {id:'__none__',name:'',sa:-Infinity,ea:Infinity,c:''};
+
+  items.forEach(item=>{
+    const age = ageAt(item.date);
+    const ph  = phases.find(p=>age>=p.sa&&age<p.ea) || phNone;
+    let g = groups.find(x=>x.ph.id===ph.id);
+    if(!g){ g={ph,items:[]}; groups.push(g); }
+    g.items.push(item);
+  });
+
+  // Sort groups by the phase start age
+  groups.sort((a,b)=>(a.ph.sa??-Infinity)-(b.ph.sa??-Infinity));
+
+  const todayIso = today.toISOString().split('T')[0];
+  let nowInserted = false;
+
+  groups.forEach(g=>{
+    const {ph, items:gItems} = g;
+
+    // Phase header
+    if(ph.id!=='__none__'){
+      const band = document.createElement('div');
+      band.className='tl-phase-band';
+      const dot = document.createElement('div');
+      dot.className='tl-phase-dot';
+      dot.style.background=ph.c;
+      const name = document.createElement('span');
+      name.className='tl-phase-name'; name.textContent=ph.name;
+      const range = document.createElement('span');
+      range.className='tl-phase-range'; range.textContent=`${ph.sa}–${ph.ea}`;
+      band.append(dot,name,range);
+      tlEl.appendChild(band);
+    }
+
+    const itemsWrap = document.createElement('div');
+    itemsWrap.className='tl-items';
+
+    gItems.forEach(item=>{
+      // Insert "today" marker between past and future items
+      if(!nowInserted && item.date>todayIso){
+        nowInserted=true;
+        const nm=document.createElement('div');
+        nm.className='tl-now-marker';
+        const nd=document.createElement('div'); nd.className='tl-now-dot';
+        const nl=document.createElement('div'); nl.className='tl-now-label'; nl.textContent='Today';
+        nm.append(nd,nl);
+        itemsWrap.appendChild(nm);
+      }
+
+      const row = document.createElement('div');
+      row.className='tl-item';
+
+      const dw  = document.createElement('div'); dw.className='tl-dot-wrap';
+      const dot = document.createElement('div');
+      const content = document.createElement('div'); content.className='tl-content';
+      const meta = document.createElement('div'); meta.className='tl-meta';
+      const ageDec = ageAt(item.date);
+      const ageY = Math.floor(ageDec);
+      const ageW = Math.floor((ageDec-ageY)*52);
+      meta.textContent = `${fmtDate(item.date)}  ·  Age ${ageY}y ${ageW}w`;
+
+      if(item.type==='ev'){
+        dot.className='tl-dot ev';
+        dot.style.background=item.data.c;
+        const nameEl=document.createElement('div'); nameEl.className='tl-name'; nameEl.textContent=item.data.name;
+        content.append(nameEl,meta);
+      } else {
+        dot.className='tl-dot log';
+        if(item.data.mood) dot.style.background=MOOD_COLORS[item.data.mood];
+        const txt=document.createElement('div'); txt.className='tl-text'; txt.textContent=item.data.text;
+        if(item.data.mood){
+          const mi=document.createElement('span');
+          mi.className='mood-indicator';
+          mi.style.background=MOOD_COLORS[item.data.mood];
+          mi.title=MOOD_LABELS[item.data.mood];
+          meta.prepend(mi);
+        }
+        content.append(txt,meta);
+        if(item.data.tags?.length){
+          const tc=document.createElement('div'); tc.className='tags-chips';
+          renderTagChips(item.data.tags,tc,t=>{activeTagFilter=t;renderTimeline();});
+          content.appendChild(tc);
+        }
+      }
+
+      // Click: open week panel for that week
+      row.addEventListener('click',()=>{
+        if(!dobEl.value)return;
+        const wi=Math.floor((new Date(item.date+'T00:00:00')-dob)/MS_WEEK);
+        const y=Math.floor(wi/52), w=wi%52;
+        const dob2=new Date(dobEl.value+'T00:00:00');
+        const iso=new Date(dob2.getTime()+wi*MS_WEEK).toISOString().split('T')[0];
+        const today2=new Date(); today2.setHours(0,0,0,0);
+        const curW=Math.floor((today2-dob2)/MS_WEEK);
+        const evMap={}, logMap={};
+        const ls=parseInt(lsEl.value)||70,total=ls*52;
+        events.forEach(ev=>{if(!ev.date)return;const wi2=Math.floor((new Date(ev.date+'T00:00:00')-dob2)/MS_WEEK);if(wi2>=0&&wi2<total)(evMap[wi2]=evMap[wi2]||[]).push(ev);});
+        logs.forEach(lg=>{if(!lg.date)return;const wi2=Math.floor((new Date(lg.date+'T00:00:00')-dob2)/MS_WEEK);if(wi2>=0&&wi2<total)(logMap[wi2]=logMap[wi2]||[]).push(lg);});
+        openWeekPanel(wi,y,w,iso,dob2,evMap,logMap);
+      });
+
+      dw.appendChild(dot);
+      row.append(dw,content);
+      itemsWrap.appendChild(row);
+    });
+
+    tlEl.appendChild(itemsWrap);
+  });
+
+  // If today is after all items, still show marker
+  if(!nowInserted){
+    const nm=document.createElement('div'); nm.className='tl-now-marker';
+    const nd=document.createElement('div'); nd.className='tl-now-dot';
+    const nl=document.createElement('div'); nl.className='tl-now-label'; nl.textContent='Today';
+    nm.append(nd,nl);
+    tlEl.appendChild(nm);
+  }
+}
+
+/* ── init ── */
+renderPhases();renderEvents();renderLogList();render();
+</script>
